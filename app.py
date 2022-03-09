@@ -3,10 +3,6 @@ from fastai.vision.all import *
 import pydicom
 from pydicom.pixel_data_handlers.util import apply_voi_lut
 
-import pathlib
-temp = pathlib.PosixPath
-pathlib.PosixPath = pathlib.WindowsPath
-
 header = st.container()
 dataset = st.container()
 feature = st.container()
