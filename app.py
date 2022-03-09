@@ -3,6 +3,11 @@ from fastai.vision.all import *
 import pydicom
 from pydicom.pixel_data_handlers.util import apply_voi_lut
 
+# # for Windows
+# import pathlib
+# temp = pathlib.PosixPath
+# pathlib.PosixPath = pathlib.WindowsPath
+
 header = st.container()
 
 def get_x(r):
@@ -30,18 +35,22 @@ learn = load_learner('export.pkl')
 
 with header:
     st.header('Pog Prediction')
-    # option = st.selectbox(
-    #     'How would you like to be contacted?',
-    #     ('Email', 'Home phone', 'Mobile phone')
-    # )
-    dicom_bytes = st.file_uploader("Upload DICOM file")
-
-    if not dicom_bytes:
-        raise st.stop()  
-    try:
-        png = dicom2png(dicom_bytes)
-    except:
-        st.write(WrongFileType("Does not appear to be a DICOM file"))
-        raise st.stop()
-    st.image(png)
-    st.text(learn.predict(image_path))
+    option = st.selectbox(
+        'Data?',
+        ('Sample Data', 'Upload Data')
+    )
+    with st.spinner(text="In progress..."):
+        if option == 'Upload Data':
+            dicom_bytes = st.file_uploader("Upload DICOM file")
+            if not dicom_bytes:
+                raise st.stop()  
+            try:
+                png = dicom2png(dicom_bytes)
+            except:
+                st.write(WrongFileType("Does not appear to be a DICOM file"))
+                raise st.stop()
+            st.image(png)
+            st.text(learn.predict(image_path))
+        st.balloons()
+        st.snow()
+    
