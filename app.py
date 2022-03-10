@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+import urllib.request
 from fastai.vision.all import *
 import pydicom
 from pydicom.pixel_data_handlers.util import apply_voi_lut
@@ -8,7 +10,21 @@ from pydicom.pixel_data_handlers.util import apply_voi_lut
 # temp = pathlib.PosixPath
 # pathlib.PosixPath = pathlib.WindowsPath
 
-header = st.container()
+@st.cache
+def get_sample():
+    df_sample = pd.read_csv('sample_image.csv')
+    return df_sample
+
+@st.cache
+def get_image(df_sample, image_option):
+    df_sample = df_sample[df_sample['BraTS21ID'] == image_option]
+    url = df_sample['url'].values[0]
+    actual = df_sample['MGMT_value'].values[0]
+    image_path, _ = urllib.request.urlretrieve(url)
+    return image_path, actual
+
+class WrongFileType(ValueError):
+    pass
 
 def get_x(r):
     return r['filepath']
@@ -27,27 +43,29 @@ def dicom2png(file):
     im = Image.fromarray(data)
     return im
 
-class WrongFileType(ValueError):
-    pass
-
 image_path = 'Image.png'
 learn = load_learner('export.pkl')
 
-with header:
-    st.header('Pog Prediction')
-    option = st.selectbox(
-        'Data?',
-        ('Sample Data', 'Upload Data')
-    )
-    with st.spinner(text="In progress..."):
-        if option == 'Sample Data':
-            image_option = st.selectbox(
-                'Image?',
-                ('Image-13.png','')
-            )
-            st.image(image_option)
-            st.text(learn.predict(image_option))
+header = st.container()
 
+with header:
+    with st.spinner(text="Robot are not train to be slow..."):
+        actual = ""
+        st.header('Pog Prediction')
+        option = st.selectbox(
+            'Data Source',
+            ('Sample Data', 'Upload Data')
+        )
+        
+        if option == 'Sample Data':
+            df_sample = get_sample()
+            sample_option = sorted(list(df_sample['BraTS21ID']))
+            image_option = st.selectbox(
+                'Sample Image ID',
+                sample_option
+            )
+            image_path, actual = get_image(df_sample, image_option)
+        
         if option == 'Upload Data':
             dicom_bytes = st.file_uploader("Upload DICOM file")
             if not dicom_bytes:
@@ -57,8 +75,16 @@ with header:
             except:
                 st.write(WrongFileType("Does not appear to be a DICOM file"))
                 raise st.stop()
-            st.image(png)
             png.save(image_path)
-            st.text(learn.predict(image_path))
+
+        pred = learn.predict(image_path) # ('1', TensorBase(1), TensorBase([0.0034, 0.9966]))
+        prediction = 'No MGMT present' if pred[0] == "0" else "MGMT present"
+        actual = 'No MGMT present' if actual == 0 else "MGMT present"
+        st.metric(
+            label="Prediction", 
+            value=f"{prediction} (actual: {actual})", 
+            delta=f"Confidence: {round(float(pred[2][int(pred[0])]) * 100, 4)} %"
+        )
+        st.image(image_path)
 
         st.balloons()
