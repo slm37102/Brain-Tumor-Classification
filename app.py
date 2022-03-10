@@ -43,7 +43,7 @@ with header:
         if option == 'Sample Data':
             image_option = st.selectbox(
                 'Image?',
-                ('Image-13.png')
+                (('Image-13.png'))
             )
             st.image(image_option)
             st.text(learn.predict(image_option))
