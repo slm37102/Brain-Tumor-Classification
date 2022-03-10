@@ -40,6 +40,14 @@ with header:
         ('Sample Data', 'Upload Data')
     )
     with st.spinner(text="In progress..."):
+        if option == 'Sample Data':
+            image_option = st.selectbox(
+                'Image?',
+                ('Image13.png', '2')
+            )
+            st.image(image_option)
+            st.text(learn.predict(image_option))
+
         if option == 'Upload Data':
             dicom_bytes = st.file_uploader("Upload DICOM file")
             if not dicom_bytes:
@@ -52,4 +60,5 @@ with header:
             st.image(png)
             png.save(image_path)
             st.text(learn.predict(image_path))
+
         st.balloons()
