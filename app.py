@@ -53,5 +53,3 @@ with header:
             png.save(image_path)
             st.text(learn.predict(image_path))
         st.balloons()
-        st.snow()
-    
