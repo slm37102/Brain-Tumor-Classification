@@ -50,7 +50,7 @@ with header:
                 st.write(WrongFileType("Does not appear to be a DICOM file"))
                 raise st.stop()
             st.image(png)
-            st.text(learn.predict(image_path))
+            st.text(learn.predict(png))
         st.balloons()
         st.snow()
     
