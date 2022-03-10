@@ -30,7 +30,7 @@ def dicom2png(file):
 class WrongFileType(ValueError):
     pass
 
-image_path = 'Image-13.png'
+image_path = 'Image.png'
 learn = load_learner('export.pkl')
 
 with header:
@@ -50,7 +50,8 @@ with header:
                 st.write(WrongFileType("Does not appear to be a DICOM file"))
                 raise st.stop()
             st.image(png)
-            st.text(learn.predict(png))
+            png.save(image_path)
+            st.text(learn.predict(image_path))
         st.balloons()
         st.snow()
     
