@@ -18,10 +18,15 @@ def get_sample():
 @st.cache
 def get_image(df_sample, image_option):
     df_sample = df_sample[df_sample['BraTS21ID'] == image_option]
-    url = df_sample['url'].values[0]
+    image_path = df_sample['filepath'].values[0]
     actual = df_sample['MGMT_value'].values[0]
-    image_path, _ = urllib.request.urlretrieve(url)
     return image_path, actual
+
+# TODO: cache model
+# https://docs.streamlit.io/library/advanced-features/caching#typical-hash-functions
+@st.cache
+def get_model():
+    pass
 
 class WrongFileType(ValueError):
     pass
@@ -47,6 +52,8 @@ image_path = 'Image.png'
 learn = load_learner('export.pkl')
 
 header = st.container()
+prediction_col, actual_col = st.columns(2)
+visualization = st.container()
 
 with header:
     with st.spinner(text="Robot are not train to be slow..."):
@@ -80,11 +87,20 @@ with header:
         pred = learn.predict(image_path) # ('1', TensorBase(1), TensorBase([0.0034, 0.9966]))
         prediction = 'No MGMT present' if pred[0] == "0" else "MGMT present"
         actual = 'No MGMT present' if actual == 0 else "MGMT present"
-        st.metric(
-            label="Prediction", 
-            value=f"{prediction} (actual: {actual})", 
-            delta=f"Confidence: {round(float(pred[2][int(pred[0])]) * 100, 4)} %"
-        )
-        st.image(image_path)
+with prediction_col:
+    st.metric(
+        label="Prediction", 
+        value=f"{prediction}", 
+        delta=f"Confidence: {round(float(pred[2][int(pred[0])]) * 100, 4)} %"
+    )
+with actual_col:
+    st.metric(
+        label="Actual", 
+        value=f"{actual}"
+    )
+with visualization:
+    # TODO: make time cost
+    st.title('Sus Image')
+    st.image(image_path)
 
-        st.balloons()
+st.balloons()
