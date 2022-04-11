@@ -1,14 +1,17 @@
 import streamlit as st
 import pandas as pd
-import urllib.request
 from fastai.vision.all import *
 import pydicom
 from pydicom.pixel_data_handlers.util import apply_voi_lut
-
+import time
+start_time = time.time()
 # # for Windows
 # import pathlib
 # temp = pathlib.PosixPath
 # pathlib.PosixPath = pathlib.WindowsPath
+
+# TODO: Description
+# TODO: EDA
 
 @st.cache
 def get_sample():
@@ -24,9 +27,11 @@ def get_image(df_sample, image_option):
 
 # TODO: cache model
 # https://docs.streamlit.io/library/advanced-features/caching#typical-hash-functions
-@st.cache
+# https://docs.streamlit.io/library/advanced-features/experimental-cache-primitives
+# @st.cache
+@st.experimental_singleton
 def get_model():
-    pass
+    return load_learner('export.pkl')
 
 class WrongFileType(ValueError):
     pass
@@ -48,8 +53,7 @@ def dicom2png(file):
     im = Image.fromarray(data)
     return im
 
-image_path = 'Image.png'
-learn = load_learner('export.pkl')
+learn = get_model()
 
 header = st.container()
 prediction_col, actual_col = st.columns(2)
@@ -74,6 +78,7 @@ with header:
             image_path, actual = get_image(df_sample, image_option)
         
         if option == 'Upload Data':
+            image_path = 'image.png'
             dicom_bytes = st.file_uploader("Upload DICOM file")
             if not dicom_bytes:
                 raise st.stop()  
@@ -99,7 +104,7 @@ with actual_col:
         value=f"{actual}"
     )
 with visualization:
-    # TODO: make time cost
+    st.write("Time taken: %.3f seconds" % (time.time() - start_time))
     st.title('Sus Image')
     st.image(image_path)
 
