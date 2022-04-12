@@ -4,31 +4,22 @@ from fastai.vision.all import *
 import pydicom
 from pydicom.pixel_data_handlers.util import apply_voi_lut
 import time
+
 start_time = time.time()
+
 # # for Windows
 # import pathlib
 # temp = pathlib.PosixPath
 # pathlib.PosixPath = pathlib.WindowsPath
 
-# TODO: Description
-# TODO: EDA
-
-@st.cache
+@st.cache(ttl=300)
 def get_sample():
     df_sample = pd.read_csv('sample_image.csv')
     return df_sample
 
-@st.cache
-def get_image(df_sample, image_option):
-    df_sample = df_sample[df_sample['BraTS21ID'] == image_option]
-    image_path = df_sample['filepath'].values[0]
-    actual = df_sample['MGMT_value'].values[0]
-    return image_path, actual
-
 # TODO: cache model
 # https://docs.streamlit.io/library/advanced-features/caching#typical-hash-functions
 # https://docs.streamlit.io/library/advanced-features/experimental-cache-primitives
-# @st.cache
 @st.experimental_singleton
 def get_model():
     return load_learner('export.pkl')
@@ -54,28 +45,43 @@ def dicom2png(file):
     return im
 
 learn = get_model()
+st.title('Brain Damaged Estimator')
+# TODO: Descriptions
+with st.expander("What is this app for?"):
+    st.write("The app aims to predict the status of a genetic biomarker (MGMT promoter methylation) which is important for brain cancer treatment.")
+    st.write("MGMT promoter methylation is the key mechanism of MGMT gene silencing and predicts a favorable outcome in patients with glioblastoma who are exposed to alkylating agent chemotherapy.")
+    st.write("")
+
+with st.expander("How to use?"):
+    st.write("You can use the sample brain tumor image or upload a dicom file to predict the results")
+
+# TODO: EDA
 
 header = st.container()
 prediction_col, actual_col = st.columns(2)
 visualization = st.container()
 
 with header:
+    st.header("Pog Prediction")
     with st.spinner(text="Robot are not train to be slow..."):
         actual = ""
-        st.header('Pog Prediction')
-        option = st.selectbox(
-            'Data Source',
+        option = st.radio(
+            'Select Your Data Source',
             ('Sample Data', 'Upload Data')
         )
         
         if option == 'Sample Data':
             df_sample = get_sample()
             sample_option = sorted(list(df_sample['BraTS21ID']))
+            with st.expander("List of sample data"):
+                for _, row in df_sample.iterrows():
+                    st.image(row['filepath'], caption=f"Sample Image ID: {row['BraTS21ID']}, MGMT value: {row['MGMT_value']}")
             image_option = st.selectbox(
                 'Sample Image ID',
                 sample_option
             )
-            image_path, actual = get_image(df_sample, image_option)
+            image_path = df_sample[df_sample['BraTS21ID'] == image_option]['filepath'].values[0]
+            actual = df_sample['MGMT_value'].values[0]
         
         if option == 'Upload Data':
             image_path = 'image.png'
@@ -88,24 +94,27 @@ with header:
                 st.write(WrongFileType("Does not appear to be a DICOM file"))
                 raise st.stop()
             png.save(image_path)
-
+        # TODO: add button to predict?
         pred = learn.predict(image_path) # ('1', TensorBase(1), TensorBase([0.0034, 0.9966]))
         prediction = 'No MGMT present' if pred[0] == "0" else "MGMT present"
         actual = 'No MGMT present' if actual == 0 else "MGMT present"
+        
 with prediction_col:
     st.metric(
-        label="Prediction", 
+        label="Predicted", 
         value=f"{prediction}", 
         delta=f"Confidence: {round(float(pred[2][int(pred[0])]) * 100, 4)} %"
     )
+    
 with actual_col:
     st.metric(
         label="Actual", 
         value=f"{actual}"
     )
+    
 with visualization:
     st.write("Time taken: %.3f seconds" % (time.time() - start_time))
-    st.title('Sus Image')
+    st.title('Sus Image ඞ')
     st.image(image_path)
 
 st.balloons()
