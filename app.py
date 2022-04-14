@@ -40,6 +40,14 @@ def get_y(r):
     return r['MGMT_value']
 
 def dicom2png(file):
+    """Turn Dicom image into PNG format
+
+    Args:
+        file (str): dicom image file that user uploaded 
+
+    Returns:
+        Image: Image in PNG format 
+    """
     dicom = pydicom.read_file(file, force=True)
     data = apply_voi_lut(dicom.pixel_array, dicom)
     if dicom.PhotometricInterpretation == "MONOCHROME1":
@@ -107,10 +115,12 @@ with st.sidebar:
             ('Sample Data', 'Upload Data')
         )
 
+        # if user chooses to use sample data
         if option == 'Sample Data':
             df_sample = get_sample()
             sample_option = sorted(list(df_sample['BraTS21ID']))
             with st.expander("List of sample data"):
+                # loop through all sample images
                 for _, row in df_sample.iterrows():
                     st.image(row['filepath'], caption=f"Sample Image ID: {row['BraTS21ID']}, MGMT value: {row['MGMT_value']}")
             image_option = st.selectbox(
@@ -120,17 +130,22 @@ with st.sidebar:
             image_path = df_sample[df_sample['BraTS21ID'] == image_option]['filepath'].values[0]
             actual = df_sample['MGMT_value'].values[0]
         
+        # if user chooses to use upload data
         if option == 'Upload Data':
             image_path = 'image.png'
             dicom_bytes = st.file_uploader("Upload DICOM file")
+            # if the upload file is empty
             if not dicom_bytes:
                 raise st.stop()  
+            # try if file format is dicom 
             try:
                 png = dicom2png(dicom_bytes)
             except:
                 st.write(WrongFileType("Does not appear to be a DICOM file"))
                 raise st.stop()
+            
             png.save(image_path)
+        
         pressed = st.button('Do not click')
 
 # if button is pressed
