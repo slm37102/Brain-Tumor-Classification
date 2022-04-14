@@ -7,7 +7,7 @@
 [Link to Streamlit App](https://share.streamlit.io/slm37102/brain_tumor_classification/main/app.py)
 
 TODO:
-- multimodel
+- Multimodel
 - Heatmap
 - EDA
 - Button when predict?
