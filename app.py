@@ -58,17 +58,19 @@ def dicom2png(file):
     im = Image.fromarray(data)
     return im
 
-def create_animation(ims):
+@st.cache
+def create_animation():
     plt.style.use('dark_background')
     fig = plt.figure(figsize=(3,3))
     plt.axis('off')
-    im = plt.imshow(ims[0], cmap="gray")
+    images = [Image.open(f'images/EDA/Image-{i}.png') for i in range(4,33)]
+    im = plt.imshow(images[0], cmap="gray")
 
     def animate_func(i):
-        im.set_array(ims[i])
+        im.set_array(images[i])
         return [im]
 
-    return animation.FuncAnimation(fig, animate_func, frames = len(ims), interval = 1000//24)
+    return animation.FuncAnimation(fig, animate_func, frames = len(images), interval = 1000//24)
 
 learn = get_model()
 st.title('🧠 Brain Damaged Estimator 🧠')
@@ -91,8 +93,7 @@ with st.expander("How to use"):
 
 # TODO: EDA
 with st.expander('Data Visualization'):
-    images = [Image.open(f'images/EDA/Image-{i}.png') for i in range(4,33)]
-    line_ani = create_animation(images)
+    line_ani = create_animation()
     components.html(line_ani.to_jshtml().replace('''.anim-state label {
     margin-right: 8px;
 }''', '''.anim-state label {
