@@ -4,7 +4,7 @@
 - MGMT promoter methylation is the key mechanism of MGMT gene silencing and predicts a favorable outcome in patients with glioblastoma who are exposed to alkylating agent chemotherapy.
 
 
-[Streamlit app link](https://share.streamlit.io/slm37102/brain_tumor_classification/main/app.py)
+[Link to Streamlit App](https://share.streamlit.io/slm37102/brain_tumor_classification/main/app.py)
 
 TODO:
 - multimodel
