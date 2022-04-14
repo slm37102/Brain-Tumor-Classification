@@ -58,12 +58,15 @@ def dicom2png(file):
     im = Image.fromarray(data)
     return im
 
-@st.cache
+@st.cache(ttl=300)
+def get_images():
+    return [Image.open(f'images/EDA/Image-{i}.png') for i in range(4,33)]
+
 def create_animation():
     plt.style.use('dark_background')
     fig = plt.figure(figsize=(3,3))
     plt.axis('off')
-    images = [Image.open(f'images/EDA/Image-{i}.png') for i in range(4,33)]
+    images = get_images()
     im = plt.imshow(images[0], cmap="gray")
 
     def animate_func(i):
