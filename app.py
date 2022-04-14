@@ -3,6 +3,10 @@ import pandas as pd
 from fastai.vision.all import *
 import pydicom
 from pydicom.pixel_data_handlers.util import apply_voi_lut
+import matplotlib.pyplot as plt
+from matplotlib import animation
+from PIL import Image
+import streamlit.components.v1 as components
 import time
 
 start_time = time.time()
@@ -46,9 +50,22 @@ def dicom2png(file):
     im = Image.fromarray(data)
     return im
 
-learn = get_model()
-st.title('Brain Damaged Estimator')
+def create_animation(ims):
+    plt.style.use('dark_background')
+    fig = plt.figure(figsize=(3,3))
+    plt.axis('off')
+    im = plt.imshow(ims[0], cmap="gray")
 
+    def animate_func(i):
+        im.set_array(ims[i])
+        return [im]
+
+    return animation.FuncAnimation(fig, animate_func, frames = len(ims), interval = 1000//24)
+
+learn = get_model()
+st.title('🧠 Brain Damaged Estimator 🧠')
+
+# App Description
 with st.expander("What is this app for"):
     st.markdown("The dataset is based on a Kaggle competition called [RSNA-MICCAI Brain Tumor Radiogenomic Classification](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification), which is organized by Radiological Society of North America (RSNA).")
     st.write("The app aims to predict the status of a genetic biomarker (MGMT promoter methylation) which is important for choosing the brain cancer treatment for a patient.")
@@ -65,6 +82,18 @@ with st.expander("How to use"):
     st.markdown("Sample dicom file can be downloaded from [here](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification/data).")
 
 # TODO: EDA
+with st.expander('Data Visualization'):
+    images = [Image.open(f'images/EDA/Image-{i}.png') for i in range(4,33)]
+    line_ani = create_animation(images)
+    components.html(line_ani.to_jshtml().replace('''.anim-state label {
+    margin-right: 8px;
+}''', '''.anim-state label {
+    margin-right: 8px;
+    color: white;
+    font-family:Helvetica;
+    font-size: 12px;
+}'''), height=400)
+
 header = st.container()
 prediction_col, actual_col = st.columns(2)
 visualization = st.container()
@@ -77,7 +106,7 @@ with st.sidebar:
             'Select Your Data Source',
             ('Sample Data', 'Upload Data')
         )
-        
+
         if option == 'Sample Data':
             df_sample = get_sample()
             sample_option = sorted(list(df_sample['BraTS21ID']))
@@ -104,30 +133,32 @@ with st.sidebar:
             png.save(image_path)
         pressed = st.button('Do not click')
 
+# if button is pressed
 if pressed:
-    pred = learn.predict(image_path) # sample output = ('1', TensorBase(1), TensorBase([0.0034, 0.9966]))
-    prediction = 'No MGMT present' if pred[0] == "0" else "MGMT present"
-    actual = 'No MGMT present' if actual == 0 else "MGMT present"
-    
-    with header:
-        st.header("Pog Prediction")
-        pass
-
-    with visualization:
-        st.write("Time taken: %.3f seconds" % (time.time() - start_time))
-        st.image(image_path)
+    with st.spinner(text="Predicting in Progress..."):
+        # predict using image
+        pred = learn.predict(image_path) # sample output = ('1', TensorBase(1), TensorBase([0.0034, 0.9966]))
+        prediction = 'No MGMT present' if pred[0] == "0" else "MGMT present"
+        actual = 'No MGMT present' if actual == 0 else "MGMT present"
         
-    with prediction_col:
-        st.metric(
-            label="Predicted", 
-            value=f"{prediction}", 
-            delta=f"Confidence: {round(float(pred[2][int(pred[0])]) * 100, 4)} %"
-        )
-        
-    with actual_col:
-        st.metric(
-            label="Actual", 
-            value=f"{actual}"
-        )
+        with header:
+            st.header("Pog Prediction")
 
-    st.balloons()
+        with visualization:
+            st.write("Time taken: %.3f seconds" % (time.time() - start_time))
+            st.image(image_path)
+            
+        with prediction_col:
+            st.metric(
+                label="Predicted", 
+                value=f"{prediction}", 
+                delta=f"Confidence: {round(float(pred[2][int(pred[0])]) * 100, 4)} %"
+            )
+            
+        with actual_col:
+            st.metric(
+                label="Actual", 
+                value=f"{actual}"
+            )
+
+        st.balloons()

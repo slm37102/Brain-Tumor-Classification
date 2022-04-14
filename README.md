@@ -9,5 +9,3 @@
 TODO:
 - Multimodel
 - Heatmap
-- EDA
-- Button when predict?
