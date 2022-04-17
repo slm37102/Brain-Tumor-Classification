@@ -8,17 +8,18 @@ from matplotlib import animation
 from PIL import Image
 import streamlit.components.v1 as components
 import time
-
-start_time = time.time()
+import s3fs
 
 # # for Windows
 # import pathlib
 # temp = pathlib.PosixPath
 # pathlib.PosixPath = pathlib.WindowsPath
 
+start_time = time.time()
+fs = s3fs.S3FileSystem(anon=False)
 st.set_page_config(initial_sidebar_state='expanded',)
 
-@st.cache(ttl=300)
+@st.cache(ttl=600)
 def get_sample():
     df_sample = pd.read_csv('sample_image.csv')
     return df_sample
@@ -26,9 +27,14 @@ def get_sample():
 # TODO: cache model
 # https://docs.streamlit.io/library/advanced-features/caching#typical-hash-functions
 # https://docs.streamlit.io/library/advanced-features/experimental-cache-primitives
-@st.experimental_singleton
-def get_model():
-    return load_learner('export.pkl')
+# @st.experimental_singleton
+def get_model(filename='fyp-slm/models/export.pkl'):
+    with fs.open(filename) as model:
+        return load_learner(model)
+# @st.experimental_memo(ttl=600)
+# def get_model(filename):
+#     with fs.open(filename) as f:
+#         return load_learner()
 
 class WrongFileType(ValueError):
     pass
@@ -58,7 +64,7 @@ def dicom2png(file):
     im = Image.fromarray(data)
     return im
 
-@st.cache(ttl=300)
+@st.cache(ttl=600)
 def get_images():
     return [Image.open(f'images/EDA/Image-{i}.png') for i in range(4,33)]
 
