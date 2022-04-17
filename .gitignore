@@ -1,3 +1,4 @@
 temp.py
 image.png
 .streamlit/*
+*.pkl

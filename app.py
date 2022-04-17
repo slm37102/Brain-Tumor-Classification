@@ -27,14 +27,13 @@ def get_sample():
 # TODO: cache model
 # https://docs.streamlit.io/library/advanced-features/caching#typical-hash-functions
 # https://docs.streamlit.io/library/advanced-features/experimental-cache-primitives
-# @st.experimental_singleton
-def get_model(filename='fyp-slm/models/export.pkl'):
-    with fs.open(filename) as model:
-        return load_learner(model)
-# @st.experimental_memo(ttl=600)
-# def get_model(filename):
-#     with fs.open(filename) as f:
-#         return load_learner()
+@st.experimental_singleton
+def get_model(filename='export.pkl'):
+    import os
+    fs.get(f'fyp-slm/models/{filename}', filename)
+    model = load_learner(filename)
+    os.remove(filename)
+    return model
 
 class WrongFileType(ValueError):
     pass
