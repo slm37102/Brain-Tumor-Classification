@@ -94,7 +94,7 @@ def get_images():
     return [Image.open(f'images/EDA/Image-{i}.png') for i in range(4,33)]
 
 def create_animation():
-    """create animation using the brain tumor images
+    """create animation using the brain tumour images
 
     Returns:
         animation.FuncAnimation: animation.FuncAnimation from matplotlib
@@ -111,7 +111,7 @@ def create_animation():
 
     return animation.FuncAnimation(fig, animate_func, frames = len(images), interval = 1000//24)
 
-st.title('Brain Tumor Radiogenomic Classification')
+st.title('Brain Tumour Radiogenomic Classification')
 
 # App Description
 with st.expander("What is this app for"):
@@ -130,8 +130,9 @@ with st.expander("How to use"):
     st.write("")
     st.markdown("Sample dicom file can be downloaded from [here](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification/data).")
 
-# 
+# content of sidebar
 with st.expander('Data Visualization'):
+    st.write('Sample Magnetic Resonance Imaging (MRI) image of brain tumour')
     # loading spinner to show process in progress
     with st.spinner(text="Robot are not train to be slow..."):
         # create animation for data visualization
