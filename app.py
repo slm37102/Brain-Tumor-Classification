@@ -9,6 +9,7 @@ from PIL import Image
 import streamlit.components.v1 as components
 import time
 import s3fs
+import os
 
 # # for Windows
 # import pathlib
@@ -24,13 +25,10 @@ def get_sample():
     df_sample = pd.read_csv('sample_image.csv')
     return df_sample
 
-# TODO: cache model
-# https://docs.streamlit.io/library/advanced-features/caching#typical-hash-functions
-# https://docs.streamlit.io/library/advanced-features/experimental-cache-primitives
 @st.experimental_singleton
 def get_model(filename='export.pkl'):
-    import os
-    fs.get(f'fyp-slm/models/{filename}', filename)
+    filename = 'models/' + filename
+    fs.get(f'fyp-slm/{filename}', filename)
     model = load_learner(filename)
     os.remove(filename)
     return model
@@ -81,7 +79,7 @@ def create_animation():
     return animation.FuncAnimation(fig, animate_func, frames = len(images), interval = 1000//24)
 
 learn = get_model()
-st.title('🧠 Brain Damaged Estimator 🧠')
+st.title('Brain Tumor Radiogenomic Classification')
 
 # App Description
 with st.expander("What is this app for"):
@@ -99,10 +97,11 @@ with st.expander("How to use"):
     st.write("")
     st.markdown("Sample dicom file can be downloaded from [here](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification/data).")
 
-# TODO: EDA
+
 with st.expander('Data Visualization'):
-    line_ani = create_animation()
-    components.html(line_ani.to_jshtml().replace('''.anim-state label {
+    with st.spinner(text="Robot are not train to be slow..."):
+        line_ani = create_animation()
+        components.html(line_ani.to_jshtml().replace('''.anim-state label {
     margin-right: 8px;
 }''', '''.anim-state label {
     margin-right: 8px;
@@ -155,7 +154,7 @@ with st.sidebar:
             
             png.save(image_path)
         
-        pressed = st.button('Do not click')
+        pressed = st.button('Start Predict')
 
 # if button is pressed
 if pressed:
@@ -166,7 +165,7 @@ if pressed:
         actual = 'No MGMT present' if actual == 0 else "MGMT present"
         
         with header:
-            st.header("Pog Prediction")
+            st.header("Prediction")
 
         with visualization:
             st.write("Time taken: %.3f seconds" % (time.time() - start_time))
