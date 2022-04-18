@@ -11,7 +11,4 @@ TODO:
 - Multimodel
 - Heatmap
 - Tooltips
-<<<<<<< HEAD
 - prediction to API
-=======
->>>>>>> c32485c17b897fd0d8bbc006b0f21cb02284ec94
