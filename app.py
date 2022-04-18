@@ -16,29 +16,52 @@ import os
 # temp = pathlib.PosixPath
 # pathlib.PosixPath = pathlib.WindowsPath
 
-start_time = time.time()
+# initiate AWS S3 filesystem
 fs = s3fs.S3FileSystem(anon=False)
+# show sidebar when entering the app
 st.set_page_config(initial_sidebar_state='expanded',)
 
 @st.cache(ttl=600)
-def get_sample():
-    df_sample = pd.read_csv('sample_image.csv')
+def get_sample(filename='sample_image.csv'):
+    """Get the sample image dataset from csv file
+    The function is cached for 5 minutes for faster runtime.
+
+    Args:
+        filename (str, optional): the file name to read. Defaults to 'sample_image.csv'.
+
+    Returns:
+        pandas.DataFrame: data frame of sample images
+    """
+    df_sample = pd.read_csv(filename)
     return df_sample
 
 @st.experimental_singleton
 def get_model(filename='export.pkl'):
+    """Download the model from AWS S3. return learner for prediction.
+
+    Args:
+        filename (str, optional): filename of the model to be imported. Defaults to 'export.pkl'.
+
+    Returns:
+        Learner: Fastai Learner class
+    """
     filename = 'models/' + filename
+    # download model from the AWS S3 bucket filesystem
     fs.get(f'fyp-slm/{filename}', filename)
+    # load model
     model = load_learner(filename)
+    # remove model file
     os.remove(filename)
     return model
 
 class WrongFileType(ValueError):
     pass
 
+# neccesary input function for importing the model
 def get_x(r):
     return r['filepath']
 
+# neccesary output function for importing the model
 def get_y(r):
     return r['MGMT_value']
 
@@ -63,9 +86,19 @@ def dicom2png(file):
 
 @st.cache(ttl=600)
 def get_images():
+    """Get images of sample data
+
+    Returns:
+        list: list of Image
+    """
     return [Image.open(f'images/EDA/Image-{i}.png') for i in range(4,33)]
 
 def create_animation():
+    """create animation using the brain tumor images
+
+    Returns:
+        animation.FuncAnimation: animation.FuncAnimation from matplotlib
+    """
     plt.style.use('dark_background')
     fig = plt.figure(figsize=(3,3))
     plt.axis('off')
@@ -78,7 +111,6 @@ def create_animation():
 
     return animation.FuncAnimation(fig, animate_func, frames = len(images), interval = 1000//24)
 
-learn = get_model()
 st.title('Brain Tumor Radiogenomic Classification')
 
 # App Description
@@ -87,6 +119,7 @@ with st.expander("What is this app for"):
     st.write("The app aims to predict the status of a genetic biomarker (MGMT promoter methylation) which is important for choosing the brain cancer treatment for a patient.")
     st.write("MGMT promoter methylation is the key mechanism of MGMT gene silencing and predicts a favorable outcome in patients with glioblastoma who are exposed to alkylating agent chemotherapy.")
 
+# App Manual
 with st.expander("How to use"):
     st.write("You can use either sample image or upload a dicom file to predict the result.")
     st.markdown("""Step to use:
@@ -97,10 +130,13 @@ with st.expander("How to use"):
     st.write("")
     st.markdown("Sample dicom file can be downloaded from [here](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification/data).")
 
-
+# 
 with st.expander('Data Visualization'):
+    # loading spinner to show process in progress
     with st.spinner(text="Robot are not train to be slow..."):
+        # create animation for data visualization
         line_ani = create_animation()
+        # make component html to show animation
         components.html(line_ani.to_jshtml().replace('''.anim-state label {
     margin-right: 8px;
 }''', '''.anim-state label {
@@ -110,14 +146,18 @@ with st.expander('Data Visualization'):
     font-size: 12px;
 }'''), height=400)
 
+# set up layout of the app
 header = st.container()
 prediction_col, actual_col = st.columns(2)
 visualization = st.container()
 
 with st.sidebar:
     st.header("Data Selection")
+    # loading spinner to show process in progress
     with st.spinner(text="Robot are not train to be slow..."):
+        # if user upload dicom file, actual is empty
         actual = ""
+        # radio buttion for user to select the test data source
         option = st.radio(
             'Select Your Data Source',
             ('Sample Data', 'Upload Data')
@@ -125,17 +165,22 @@ with st.sidebar:
 
         # if user chooses to use sample data
         if option == 'Sample Data':
+            # get list of sample images
             df_sample = get_sample()
             sample_option = sorted(list(df_sample['BraTS21ID']))
+            
             with st.expander("List of sample data"):
-                # loop through all sample images
+                # loop through all sample images and show images
                 for _, row in df_sample.iterrows():
                     st.image(row['filepath'], caption=f"Sample Image ID: {row['BraTS21ID']}, MGMT value: {row['MGMT_value']}")
+            # drop down box option for sample images
             image_option = st.selectbox(
                 'Sample Image ID',
                 sample_option
             )
+            # get path of the sample image selected
             image_path = df_sample[df_sample['BraTS21ID'] == image_option]['filepath'].values[0]
+            # get actual value of the selected sample image
             actual = df_sample['MGMT_value'].values[0]
         
         # if user chooses to use upload data
@@ -147,31 +192,46 @@ with st.sidebar:
                 raise st.stop()  
             # try if file format is dicom 
             try:
+                # convert dicom file to png format
                 png = dicom2png(dicom_bytes)
+            # if file format is not dicom, show error
             except:
                 st.write(WrongFileType("Does not appear to be a DICOM file"))
                 raise st.stop()
-            
+            # save uploaded image to path
             png.save(image_path)
-        
+        # button to start predict
         pressed = st.button('Start Predict')
 
-# if button is pressed
+# if 'Start Predict' button is pressed
 if pressed:
+    # loading spinner to show process in progress
+    with st.spinner(text="Downloading Model..."):
+        # get model for prediction
+        learn = get_model()
+    
+    # initialize start_time
+    start_time = time.time()
+    
+    # loading spinner to show process in progress
     with st.spinner(text="Predicting in Progress..."):
         # predict using image
         pred = learn.predict(image_path) # sample output = ('1', TensorBase(1), TensorBase([0.0034, 0.9966]))
+        # prediction output to label value
         prediction = 'No MGMT present' if pred[0] == "0" else "MGMT present"
+        # actual output to label value
         actual = 'No MGMT present' if actual == 0 else "MGMT present"
         
         with header:
             st.header("Prediction")
 
         with visualization:
-            st.write("Time taken: %.3f seconds" % (time.time() - start_time))
+            # show time taken for prediction
+            st.write("Time taken to predict: %.3f seconds" % (time.time() - start_time))
             st.image(image_path)
             
         with prediction_col:
+            # show predicted output and confidence
             st.metric(
                 label="Predicted", 
                 value=f"{prediction}", 
@@ -179,9 +239,11 @@ if pressed:
             )
             
         with actual_col:
+            # show actual output 
             st.metric(
                 label="Actual", 
                 value=f"{actual}"
             )
 
+        # show balloons when finished
         st.balloons()
