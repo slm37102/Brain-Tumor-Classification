@@ -10,3 +10,4 @@ TODO:
 - Multimodel
 - Heatmap
 - Tooltips
+- prediction to API
