@@ -180,7 +180,7 @@ with st.sidebar:
                 for _, row in df_sample.iterrows():
                     st.image(
                         row['filepath'], 
-                        caption=f"Image ID: {row['BraTS21ID']}, MGMT value: {'No MGMT present' if row['MGMT_value'] == 0 else 'MGMT present'}")
+                        caption=f"Image ID: {row['BraTS21ID']}, MGMT value: {'MGMT not present' if row['MGMT_value'] == 0 else 'MGMT present'}")
             # drop down box option for sample images
             image_option = st.selectbox(
                 'Sample Image ID',
@@ -238,9 +238,9 @@ if pressed:
         # predict using image
         pred = learn.predict(image_path) # sample output = ('1', TensorBase(1), TensorBase([0.0034, 0.9966]))
         # prediction output to label value
-        prediction = 'No MGMT present' if pred[0] == "0" else "MGMT present"
+        prediction = 'MGMT not present' if pred[0] == "0" else "MGMT present"
         # actual output to label value
-        actual = 'No MGMT present' if actual == 0 else "MGMT present"
+        actual = 'MGMT not present' if actual == 0 else "MGMT present"
         
         with header:
             st.header("Prediction result")
