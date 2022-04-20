@@ -1,4 +1,4 @@
-temp.py
 image.png
 .streamlit/secrets.toml
 *.pkl
+.vscode
