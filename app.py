@@ -19,7 +19,13 @@ import os
 # initiate AWS S3 filesystem
 fs = s3fs.S3FileSystem(anon=False)
 # show sidebar when entering the app
-st.set_page_config(initial_sidebar_state='expanded',)
+st.set_page_config(
+    page_title = 'Brain Tumour Radiogenomic Classification', 
+    page_icon = '🧠',
+    initial_sidebar_state = 'expanded')
+
+class WrongFileType(ValueError):
+    pass
 
 @st.cache(ttl=600)
 def get_sample(filename='sample_image.csv'):
@@ -53,9 +59,6 @@ def get_model(filename='export.pkl'):
     # remove model file
     os.remove(filename)
     return model
-
-class WrongFileType(ValueError):
-    pass
 
 # neccesary input function for importing the model
 def get_x(r):
@@ -114,21 +117,19 @@ def create_animation():
 st.title('Brain Tumour Radiogenomic Classification')
 
 # App Description
-with st.expander("What is this app for"):
-    st.markdown("The dataset is based on a Kaggle competition called [RSNA-MICCAI Brain Tumor Radiogenomic Classification](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification), which is organized by Radiological Society of North America (RSNA).")
-    st.write("The app aims to predict the status of a genetic biomarker (MGMT promoter methylation) which is important for choosing the brain cancer treatment for a patient.")
-    st.write("MGMT promoter methylation is the key mechanism of MGMT gene silencing and predicts a favorable outcome in patients with glioblastoma who are exposed to alkylating agent chemotherapy.")
+with st.expander("About the app"):
+    st.markdown("This app is based on a Kaggle competition called [RSNA-MICCAI Brain Tumor Radiogenomic Classification](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification), which is organized by Radiological Society of North America (RSNA).")
+    st.markdown("The app aims to predict the status of a genetic biomarker, ***MGMT promoter methylation***,  which is important for choosing the brain cancer treatment for a patient.")
+    st.markdown("***MGMT promoter methylation*** is the key mechanism of MGMT gene silencing and predicts a favorable outcome in patients with glioblastoma who are exposed to alkylating agent chemotherapy.")
 
 # App Manual
 with st.expander("How to use"):
     st.write("You can use either sample image or upload a dicom file to predict the result.")
-    st.markdown("""Step to use:
-1. Open sidebar
-2. Select data source
-3. Select sample or upload dicom file
-4. Press the Predict button""")
-    st.write("")
-    st.markdown("Sample dicom file can be downloaded from [here](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification/data).")
+    st.markdown("""> Step to use:
+> 1. Open sidebar
+> 2. Select data source
+> 3. Select sample / upload a dicom file (can be downloaded from [here](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification/data))
+> 4. Press the \"Start Predict\" button to start the prediction""")
 
 # content of sidebar
 with st.expander('Data Visualization'):
@@ -147,6 +148,11 @@ with st.expander('Data Visualization'):
     font-size: 12px;
 }'''), height=400)
 
+with st.expander("More about the project"):
+    st.markdown("You can go to the [GitHub link](https://github.com/slm37102/Brain-Tumor-Classification) to learn more about the project.")
+    st.write("The model training is done using [this Kaggle notebook](https://www.kaggle.com/code/slm37102/t1w-brain-tumor-eca-nfnet-l2-5-epoch)")
+    st.write("The model is trained based on [this competition dataset](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification)")
+
 # set up layout of the app
 header = st.container()
 prediction_col, actual_col = st.columns(2)
@@ -161,8 +167,7 @@ with st.sidebar:
         # radio buttion for user to select the test data source
         option = st.radio(
             'Select Your Data Source',
-            ('Sample Data', 'Upload Data')
-        )
+            ('Sample Data', 'Upload Data'))
 
         # if user chooses to use sample data
         if option == 'Sample Data':
@@ -173,16 +178,21 @@ with st.sidebar:
             with st.expander("List of sample data"):
                 # loop through all sample images and show images
                 for _, row in df_sample.iterrows():
-                    st.image(row['filepath'], caption=f"Sample Image ID: {row['BraTS21ID']}, MGMT value: {row['MGMT_value']}")
+                    st.image(
+                        row['filepath'], 
+                        caption=f"Image ID: {row['BraTS21ID']}, MGMT value: {'No MGMT present' if row['MGMT_value'] == 0 else 'MGMT present'}")
             # drop down box option for sample images
             image_option = st.selectbox(
                 'Sample Image ID',
-                sample_option
+                sample_option,
+                help='Select a sample image to predict, the sample image can be seen in the list above'
             )
+            # filter to selected_df
+            selected_df = df_sample[df_sample['BraTS21ID'] == image_option]
             # get path of the sample image selected
-            image_path = df_sample[df_sample['BraTS21ID'] == image_option]['filepath'].values[0]
+            image_path = selected_df['filepath'].values[0]
             # get actual value of the selected sample image
-            actual = df_sample['MGMT_value'].values[0]
+            actual = selected_df['MGMT_value'].values[0]
         
         # if user chooses to use upload data
         if option == 'Upload Data':
@@ -201,6 +211,15 @@ with st.sidebar:
                 raise st.stop()
             # save uploaded image to path
             png.save(image_path)
+
+        # checkbox to let user choose if needs to show image
+        display_image = st.checkbox(
+            'Display image',
+            help='Display the upload/selected image')
+        # checkbox to let user choose if needs to show time taken
+        display_time = st.checkbox(
+            'Display time taken', 
+            help='Display time needed to perform the prediction')
         # button to start predict
         pressed = st.button('Start Predict')
 
@@ -224,13 +243,17 @@ if pressed:
         actual = 'No MGMT present' if actual == 0 else "MGMT present"
         
         with header:
-            st.header("Prediction")
+            st.header("Prediction result")
 
         with visualization:
-            # show time taken for prediction
-            st.write("Time taken to predict: %.3f seconds" % (time.time() - start_time))
-            st.image(image_path)
-            
+            # displaytime taken for prediction
+            if display_time: 
+                st.write("Time taken to predict: %.3f seconds" % (time.time() - start_time))
+            # display image for prediction
+            if display_image:    
+                st.header("Image")
+                st.image(image_path)
+        
         with prediction_col:
             # show predicted output and confidence
             st.metric(
@@ -239,12 +262,13 @@ if pressed:
                 delta=f"Confidence: {round(float(pred[2][int(pred[0])]) * 100, 4)} %"
             )
             
-        with actual_col:
-            # show actual output 
-            st.metric(
-                label="Actual", 
-                value=f"{actual}"
-            )
+        if option == 'Sample Data':
+            with actual_col:
+                # show actual output 
+                st.metric(
+                    label="Actual", 
+                    value=f"{actual}"
+                )
 
         # show balloons when finished
         st.balloons()
