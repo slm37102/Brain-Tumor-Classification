@@ -248,7 +248,7 @@ if pressed:
         with visualization:
             # displaytime taken for prediction
             if display_time: 
-                st.write("Time taken to predict: %.3f seconds" % (time.time() - start_time))
+                st.success("Time taken to predict: %.3f seconds" % (time.time() - start_time))
             # display image for prediction
             if display_image:    
                 st.header("Image")
