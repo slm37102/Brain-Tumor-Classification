@@ -1,4 +1,4 @@
-﻿# Brain Tumor Classification
+﻿# Brain Tumor Radiogenomic Classification
  [![CodeFactor](https://www.codefactor.io/repository/github/slm37102/brain-tumor-classification/badge)](https://www.codefactor.io/repository/github/slm37102/brain-tumor-classification) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=slm37102_Brain-Tumor-Classification&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=slm37102_Brain-Tumor-Classification) ![](https://komarev.com/ghpvc/?username=your-github-username)
 
 - This app is based on a Kaggle competition called [RSNA-MICCAI Brain Tumor Radiogenomic Classification](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification), which is organized by Radiological Society of North America (RSNA).
