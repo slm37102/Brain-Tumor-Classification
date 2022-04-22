@@ -129,7 +129,7 @@ with st.expander("How to use"):
 > 1. Open sidebar
 > 2. Select data source
 > 3. Select sample / upload a dicom file (can be downloaded from [here](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification/data))
-> 4. Press the \"Start Predict\" button to start the prediction""")
+> 4. Press the \"Start Prediction\" button to start the prediction""")
 
 # content of sidebar
 with st.expander('Data Visualization'):
@@ -220,10 +220,10 @@ with st.sidebar:
         display_time = st.checkbox(
             'Display time taken', 
             help='Display time needed to perform the prediction')
-        # button to start predict
-        pressed = st.button('Start Predict')
+        # button to start prediction
+        pressed = st.button('Start Prediction')
 
-# if 'Start Predict' button is pressed
+# if 'Start Prediction' button is pressed
 if pressed:
     # loading spinner to show process in progress
     with st.spinner(text="Downloading Model..."):
@@ -259,16 +259,14 @@ if pressed:
             st.metric(
                 label="Predicted", 
                 value=f"{prediction}", 
-                delta=f"Confidence: {round(float(pred[2][int(pred[0])]) * 100, 4)} %"
-            )
+                delta=f"Confidence: {round(float(pred[2][int(pred[0])]) * 100, 4)} %")
             
         if option == 'Sample Data':
             with actual_col:
                 # show actual output 
                 st.metric(
                     label="Actual", 
-                    value=f"{actual}"
-                )
+                    value=f"{actual}")
 
         # show balloons when finished
         st.balloons()
