@@ -3,7 +3,7 @@
 
 - This app is based on a Kaggle competition called [RSNA-MICCAI Brain Tumor Radiogenomic Classification](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification), which is organized by Radiological Society of North America (RSNA).
 - The app aims to predict the status of a genetic biomarker (MGMT promoter methylation) which is important for choosing the brain cancer treatment.
-- MGMT promoter methylation is the key mechanism of MGMT gene silencing and predicts a favorable outcome in patients with glioblastoma who are exposed to alkylating agent chemotherapy.
+- MGMT promoter methylation is the key mechanism of MGMT gene silencing and predicts a favourable outcome in patients with glioblastoma who are exposed to alkylating agent chemotherapy.
 
 - The model training is done using [this Kaggle notebook](https://www.kaggle.com/code/slm37102/t1w-brain-tumor-eca-nfnet-l2-5-epoch)
 - The model is trained based on [this competition dataset](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification)
