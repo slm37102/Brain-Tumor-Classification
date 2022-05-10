@@ -9,8 +9,3 @@
 - The model is trained based on [this competition dataset](https://www.kaggle.com/c/rsna-miccai-brain-tumor-radiogenomic-classification)
 
 [Link to Streamlit App](https://share.streamlit.io/slm37102/brain_tumor_classification/main/app.py)
-
-TODO:
-- Multimodel
-- prediction to API
-- add more detail to README.md(model training etc)
