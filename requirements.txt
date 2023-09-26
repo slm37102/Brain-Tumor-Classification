@@ -3,3 +3,4 @@ pydicom==2.2.2
 streamlit==1.7.0
 timm==0.5.4
 s3fs==2022.3.0
+pillow>=10.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
